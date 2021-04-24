@@ -118,13 +118,8 @@ function tor-installer() {
   ./configure && make
   progreSh 85
 }
-if [[ "$torpackage" == "Tor" ]]; then
-  tor-installer
-  progreSh 92
-  progreSh 100
-fi
 
-#Install tor function
+#Install tor-browser function
 function tor-browser-installer() {
   printf "\n\n\n\n\n\n\n\n\n\n"
   progreSh 0
@@ -140,49 +135,53 @@ function tor-browser-installer() {
     if [[ "$systemProcessorConfig" == "64" ]]; then
         loadingAnimation &
         sleep 1
-        selfID=$!
+        selfId=$!
+        echo 'Downloading data...'
         curl --request GET -sL \
           --url 'http://mohuva.parsaspace.com/browser/tor-browser-linux64-fa.tar.xz' \
           --output './tor-browser-linux64-fa.tar.xz'
         tar -xf tor-browser-linux32-fa.tar.xz
         cd tor-browser_fa
         ./start-tor-browser.desktop --register-app
-        kill $selfID >/dev/null 2>&1
+        kill $selfId >/dev/null 2>&1
     else
       loadingAnimation &
       sleep 1
-      selfID=$!
+      selfID=d!
+      echo 'Downloading data...'
       curl --request GET -sL \
         --url 'http://mohuva.parsaspace.com/browser/tor-browser-linux32-fa.tar.xz' \
         --output './tor-browser-linux32-fa.tar.xz'
       tar -xf tor-browser-linux32-fa.tar.xz
       cd tor-browser_fa
       ./start-tor-browser.desktop --register-app
-      kill $selfID >/dev/null 2>&1
+      kill $selfId >/dev/null 2>&1
     fi
   else
     if [[ "$systemProcessorConfig" == "64" ]]; then
         loadingAnimation &
         sleep 1
-        selfID=$!
+        selfId=$!
+        echo 'Downloading data...'
         curl --request GET -sL \
           --url 'http://mohuva.parsaspace.com/browser/tor-browser-linux64-en-US.tar.xz' \
           --output './tor-browser-linux64-en-US.tar.xz'
         tar -xf tor-browser-linux64-en-US.tar.xz
         cd tor-browser_en-US
         ./start-tor-browser.desktop --register-app
-        kill $selfID >/dev/null 2>&1
+        kill $selfId >/dev/null 2>&1
     else
       loadingAnimation &
       sleep 1
-      selfID=$!
+      selfId=$!
+      echo 'Downloading data...'
       curl --request GET -sL \
         --url 'http://mohuva.parsaspace.com/browser/tor-browser-linux32-en-US.tar.xz' \
         --output './tor-browser-linux32-en-US.tar.xz'
       tar -xf tor-browser-linux32-en-US.tar.xz
       cd tor-browser_en-US
       ./start-tor-browser.desktop --register-app
-      kill $selfID >/dev/null 2>&1
+      kill $selfId >/dev/null 2>&1
     fi
   fi
   progreSh 40
@@ -194,9 +193,29 @@ function tor-browser-installer() {
   ./configure && make
   progreSh 85
 }
+
+if [[ "$torpackage" == "Tor" ]]; then
+  tor-installer
+  progreSh 92
+  progreSh 100
+  echo 'Tor was successfully installed'
+fi
+
 if [[ "$torpackage" == "Tor-Browser" ]]; then
   tor-browser-installer
   progreSh 92
   progreSh 100
+  echo 'Tor-Browser was successfully installed'
 fi
+
+if [[ "$torpackage" == "Tor and Tor-Browser" ]]; then
+  tor-installer
+  progreSh 87
+  progreSh 89
+  tor-browser-installer
+  progreSh 92
+  progreSh 100
+  echo 'Tor and Tor-Browser were successfully installed :)'
+fi
+
 echo "\n Finished"

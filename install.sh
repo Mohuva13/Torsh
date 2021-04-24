@@ -1,74 +1,202 @@
 #Find out if running Linux kernel (OS) is 32 or 64 bit
-systemProcessorConfig=`getconf LONG_BIT`
+systemProcessorConfig=$(getconf LONG_BIT)
 
 #loading
-loadingAnimation()
-{
-    #local variables? / state
-    duration=0
-    c=0
-    toggle=true
-    s=""
-
-    while [ true ]
-    do
-        clear
-        if [ "$toggle" = true ]
-        then
-            ((c++))
-            s+="."
-            if [ "$c" -gt 50 ]
-            then
-                #switching
-                toggle=false
-            fi
-
-        else
-            c=$((c-1))
-            s=${s: : -1}
-            if [ "$c" -lt 1 ]
-            then
-                #switching
-                toggle=true
-            fi
-        fi
-
-        ((duration++))
-        if [ "$duration" -eq 400 ]
-        then
-            # exit status 0
-            return
-        fi
-
-        echo "loading"
-        echo "$s"
-        sleep 0.0003
-    done
+loadingAnimation() {
+  echo "\n"
+  while true; do for X in '-' '/' '|' '\'; do
+    echo "\b$X"
+    sleep 0.1
+  done; done
 }
 
 #progress bar
-progress-bar() {
-  local duration=${1}
-
-
-    already_done() { for ((done=0; done<$elapsed; done++)); do printf "▇"; done }
-    remaining() { for ((remain=$elapsed; remain<$duration; remain++)); do printf " "; done }
-    percentage() { printf "| %s%%" $(( (($elapsed)*100)/($duration)*100/100 )); }
-    clean_line() { printf "\r"; }
-
-  for (( elapsed=1; elapsed<=$duration; elapsed++ )); do
-      already_done; remaining; percentage
-      sleep 1
-      clean_line
+progreSh() {
+  LR='\033[1;31m'
+  LG='\033[1;32m'
+  LY='\033[1;33m'
+  LC='\033[1;36m'
+  LW='\033[1;37m'
+  NC='\033[0m'
+  if [ "${1}" = "0" ]; then TME=$(date +"%s"); fi
+  SEC=$(printf "%04d\n" $(($(date +"%s") - ${TME})))
+  SEC="$SEC sec"
+  PRC=$(printf "%.0f" ${1})
+  SHW=$(printf "%3d\n" ${PRC})
+  LNE=$(printf "%.0f" $((${PRC} / 2)))
+  LRR=$(printf "%.0f" $((${PRC} / 2 - 12)))
+  if [ ${LRR} -le 0 ]; then LRR=0; fi
+  LYY=$(printf "%.0f" $((${PRC} / 2 - 24)))
+  if [ ${LYY} -le 0 ]; then LYY=0; fi
+  LCC=$(printf "%.0f" $((${PRC} / 2 - 36)))
+  if [ ${LCC} -le 0 ]; then LCC=0; fi
+  LGG=$(printf "%.0f" $((${PRC} / 2 - 48)))
+  if [ ${LGG} -le 0 ]; then LGG=0; fi
+  LRR_=""
+  LYY_=""
+  LCC_=""
+  LGG_=""
+  for ((i = 1; i <= 13; i++)); do
+    DOTS=""
+    for ((ii = ${i}; ii < 13; ii++)); do DOTS="${DOTS}."; done
+    if [ ${i} -le ${LNE} ]; then LRR_="${LRR_}#"; else LRR_="${LRR_}."; fi
+    echo -ne "  ${LW}${SEC}  ${LR}${LRR_}${DOTS}${LY}............${LC}............${LG}............ ${SHW}%${NC}\r"
+    if [ ${LNE} -ge 1 ]; then sleep .05; fi
   done
-  clean_line
+  for ((i = 14; i <= 25; i++)); do
+    DOTS=""
+    for ((ii = ${i}; ii < 25; ii++)); do DOTS="${DOTS}."; done
+    if [ ${i} -le ${LNE} ]; then LYY_="${LYY_}#"; else LYY_="${LYY_}."; fi
+    echo -ne "  ${LW}${SEC}  ${LR}${LRR_}${LY}${LYY_}${DOTS}${LC}............${LG}............ ${SHW}%${NC}\r"
+    if [ ${LNE} -ge 14 ]; then sleep .05; fi
+  done
+  for ((i = 26; i <= 37; i++)); do
+    DOTS=""
+    for ((ii = ${i}; ii < 37; ii++)); do DOTS="${DOTS}."; done
+    if [ ${i} -le ${LNE} ]; then LCC_="${LCC_}#"; else LCC_="${LCC_}."; fi
+    echo -ne "  ${LW}${SEC}  ${LR}${LRR_}${LY}${LYY_}${LC}${LCC_}${DOTS}${LG}............ ${SHW}%${NC}\r"
+    if [ ${LNE} -ge 26 ]; then sleep .05; fi
+  done
+  for ((i = 38; i <= 49; i++)); do
+    DOTS=""
+    for ((ii = ${i}; ii < 49; ii++)); do DOTS="${DOTS}."; done
+    if [ ${i} -le ${LNE} ]; then LGG_="${LGG_}#"; else LGG_="${LGG_}."; fi
+    echo -ne "  ${LW}${SEC}  ${LR}${LRR_}${LY}${LYY_}${LC}${LCC_}${LG}${LGG_}${DOTS} ${SHW}%${NC}\r"
+    if [ ${LNE} -ge 38 ]; then sleep .05; fi
+  done
 }
 
 #Check Internet connection with DL Host
 if ping -q -c 1 -W 1 mohuva.parsaspace.com >/dev/null; then
-  loadingAnimation
+  loadingAnimation &
+  sleep 1
+  selfID=$!
+  kill $selfID >/dev/null 2>&1
 else
   echo "Please check your internet connection and try again."
   exit
 fi
 
+#create folder for tor files
+
+path_file=~/.torsh/
+if [[ -d "$path_file" ]]; then
+  rm -rf ~/.torsh/
+  mkdir ~/.torsh/
+  cd ~/.torsh/
+else
+  mkdir ~/.torsh/
+  cd ~/.torsh/
+fi
+
+#Select package
+
+PS3="Choose which to install : "
+select torpackage in Tor Tor-Browser 'Tor and Tor-Browser'; do
+  choose=$torpackage
+  break
+done
+
+#Install functions
+
+#Install tor function
+function tor-installer() {
+  printf "\n\n\n\n\n\n\n\n\n\n"
+  progreSh 0
+  progreSh 10
+  progreSh 20
+  progreSh 30
+  curl --request GET -sL \
+    --url 'http://mohuva.parsaspace.com/source/tor.tar.gz' \
+    --output './tor.tar.gz'
+  progreSh 40
+  progreSh 50
+  progreSh 60
+  tar xzf tor.tar.gz
+  cd tor-0.4.5.7
+  progreSh 70
+  ./configure && make
+  progreSh 85
+}
+if [[ "$torpackage" == "Tor" ]]; then
+  tor-installer
+  progreSh 92
+  progreSh 100
+fi
+
+#Install tor function
+function tor-browser-installer() {
+  printf "\n\n\n\n\n\n\n\n\n\n"
+  progreSh 0
+  progreSh 10
+  progreSh 20
+  progreSh 30
+  PS3="Choose which to install : "
+  select tor_browserpackage in 'Tor-Browser English' 'Tor-Browser Farsi'; do
+    choose_browser=$tor_browserpackage
+    break
+  done
+  if [[ "$choose_browser" == "Tor-Browser Farsi" ]]; then
+    if [[ "$systemProcessorConfig" == "64" ]]; then
+        loadingAnimation &
+        sleep 1
+        selfID=$!
+        curl --request GET -sL \
+          --url 'http://mohuva.parsaspace.com/browser/tor-browser-linux64-fa.tar.xz' \
+          --output './tor-browser-linux64-fa.tar.xz'
+        tar -xf tor-browser-linux32-fa.tar.xz
+        cd tor-browser_fa
+        ./start-tor-browser.desktop --register-app
+        kill $selfID >/dev/null 2>&1
+    else
+      loadingAnimation &
+      sleep 1
+      selfID=$!
+      curl --request GET -sL \
+        --url 'http://mohuva.parsaspace.com/browser/tor-browser-linux32-fa.tar.xz' \
+        --output './tor-browser-linux32-fa.tar.xz'
+      tar -xf tor-browser-linux32-fa.tar.xz
+      cd tor-browser_fa
+      ./start-tor-browser.desktop --register-app
+      kill $selfID >/dev/null 2>&1
+    fi
+  else
+    if [[ "$systemProcessorConfig" == "64" ]]; then
+        loadingAnimation &
+        sleep 1
+        selfID=$!
+        curl --request GET -sL \
+          --url 'http://mohuva.parsaspace.com/browser/tor-browser-linux64-en-US.tar.xz' \
+          --output './tor-browser-linux64-en-US.tar.xz'
+        tar -xf tor-browser-linux64-en-US.tar.xz
+        cd tor-browser_en-US
+        ./start-tor-browser.desktop --register-app
+        kill $selfID >/dev/null 2>&1
+    else
+      loadingAnimation &
+      sleep 1
+      selfID=$!
+      curl --request GET -sL \
+        --url 'http://mohuva.parsaspace.com/browser/tor-browser-linux32-en-US.tar.xz' \
+        --output './tor-browser-linux32-en-US.tar.xz'
+      tar -xf tor-browser-linux32-en-US.tar.xz
+      cd tor-browser_en-US
+      ./start-tor-browser.desktop --register-app
+      kill $selfID >/dev/null 2>&1
+    fi
+  fi
+  progreSh 40
+  progreSh 50
+  progreSh 60
+  tar -xf tor.tar.gz
+  cd tor-0.4.5.7
+  progreSh 70
+  ./configure && make
+  progreSh 85
+}
+if [[ "$torpackage" == "Tor-Browser" ]]; then
+  tor-browser-installer
+  progreSh 92
+  progreSh 100
+fi
+echo "\n Finished"

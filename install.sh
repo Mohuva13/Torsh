@@ -194,11 +194,30 @@ function tor-browser-installer() {
   progreSh 85
 }
 
+function tor_starter() {
+    sudo systemctl enable tor.service
+    sudo systemctl start tor.service
+    journalctl -exfu tor
+}
+
+function torstarter_case() {
+    PS3="Do you want to start tor? : "
+    select torEnable in 'Yes' 'No'; do
+        if [[ "$torEnable" == "Yes" ]]; then
+            tor_starter
+        else
+          break
+        fi
+        break
+    done
+}
+
 if [[ "$torpackage" == "Tor" ]]; then
   tor-installer
   progreSh 92
   progreSh 100
   echo 'Tor was successfully installed'
+  torstarter_case
 fi
 
 if [[ "$torpackage" == "Tor-Browser" ]]; then
@@ -216,6 +235,7 @@ if [[ "$torpackage" == "Tor and Tor-Browser" ]]; then
   progreSh 92
   progreSh 100
   echo 'Tor and Tor-Browser were successfully installed :)'
+  torstarter_case
 fi
 
 echo "\n Finished"
